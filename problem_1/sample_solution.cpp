@@ -3,9 +3,6 @@
 #include <cstdint>
 #include <algorithm>
 #include <iomanip>
-#include <thread>
-#include <mutex>
-#include <future>
 
 
 std::vector<std::vector<double>> read_matrix() {
@@ -58,24 +55,14 @@ int main() {
         std::cerr << "Wrong matrices";
         return 1;
     }
-    
-    std::vector<std::thread> workers;
-    std::mutex matrix_lock;
-    std::vector<std::vector<long double>> result(left_rows, std::vector<long double>(right_cols));
-    std::vector<std::future<void>> futures;
 
+    std::vector<std::vector<double>> result(left_rows, std::vector<double>(right_cols));
     for (int i = 0; i < left_rows; ++i) {
         for (int j = 0; j < right_cols; ++j) {
-            futures.emplace_back(std::async(std::launch::async, [&result, &left, &right, i, j, left_cols]() {
-                for (int k = 0; k < left_cols; ++k) {
-                    result[i][j] += (long double) left[i][k] * (long double) right[k][j];
-                }
-            }));
+            for (int k = 0; k < left_cols; ++k) {
+                result[i][j] += left[i][k] * right[k][j];
+            }
         }
-    }
-    
-    for (auto& fut : futures) {
-        fut.get();
     }
 
     std::cout << left_rows << ' ' << right_cols << "\n";
